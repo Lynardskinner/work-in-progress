@@ -17,7 +17,7 @@
 
 import wx, random
 
-from .bufferedcanvas import *
+from bufferedcanvas import *
 
 class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''

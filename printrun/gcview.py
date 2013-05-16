@@ -26,7 +26,7 @@ pyglet.options['shadow_window'] = False
 pyglet.options['debug_gl'] = False
 from pyglet.gl import *
 
-from . import stltool
+import stltool
 
 import threading
 

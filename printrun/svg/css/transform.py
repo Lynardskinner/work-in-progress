@@ -22,7 +22,7 @@ from pyparsing import (Literal, Word, CaselessLiteral,
 
 #some shared definitions from pathdata
 
-from ..pathdata import number, maybeComma
+from pathdata import number, maybeComma
 
 paren = Literal("(").suppress()
 cparen = Literal(")").suppress()

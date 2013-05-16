@@ -23,11 +23,11 @@ import warnings
 import math
 from functools import wraps
 
-from . import pathdata
-from . import css
+import pathdata
+import css
 from svg.css.colour import colourValue
 from svg.css import values
-from .attributes import paintValue
+from attributes import paintValue
 
 document = """<?xml version = "1.0" standalone = "no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"

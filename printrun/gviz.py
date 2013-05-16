@@ -15,7 +15,7 @@
 import wx, time
 from printrun import gcoder
 
-from .printrun_utils import imagefile
+from printrun_utils import imagefile
 
 ID_ABOUT = 101
 ID_EXIT = 110

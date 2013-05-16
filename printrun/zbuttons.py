@@ -14,8 +14,8 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, os, math
-from .bufferedcanvas import *
-from .printrun_utils import *
+from bufferedcanvas import *
+from printrun_utils import *
 
 def sign(n):
     if n < 0: return -1

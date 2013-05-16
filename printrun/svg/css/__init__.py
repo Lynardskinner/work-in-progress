@@ -14,5 +14,5 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from .transform import transformList
-from .inline import inlineStyle
+from transform import transformList
+from inline import inlineStyle

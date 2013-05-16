@@ -14,7 +14,7 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, math
-from .stltool import *
+from stltool import *
 a = wx.App()
 
 def genscape(data = [[0, 1, 0, 0],[1, 0, 2, 0],[1, 0, 0, 0],[0, 1, 0, 1]], pscale = 1.0, bheight = 1.0, zscale = 1.0):

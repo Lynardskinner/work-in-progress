@@ -17,7 +17,7 @@
 
 import os
 import math
-from . import stltool
+import stltool
 import wx
 from wx import glcanvas
 import time
