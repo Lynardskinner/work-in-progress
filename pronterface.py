@@ -15,7 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, queue, re
+import os, re
+
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
@@ -23,14 +28,13 @@ install_locale('pronterface')
 try:
     import wx
 except:
-    print(_("WX is not installed. This program requires WX to run."))
+    print(_("wxPython is not installed. This program requires wxPython to run."))
     raise
-import sys, glob, time, datetime, threading, traceback, io, subprocess
+import sys, glob, time, datetime, threading, traceback, subprocess
+from io import StringIO
 
 from printrun.pronterface_widgets import *
 from serial import SerialException
-
-StringIO = cStringIO
 
 winsize = (800, 500)
 layerindex = 0
