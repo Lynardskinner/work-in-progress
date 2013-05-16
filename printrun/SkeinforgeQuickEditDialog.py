@@ -141,7 +141,7 @@ class SkeinforgeQuickEditDialog(wx.Dialog):
                 for setting in settings.getReadRepository(repo).preferences:
                     if setting.name == settingName:
                         if setting.value == None or str(x.GetValue()) != str(setting.value):
-                            print('Saving ... ' + settingName + ' = ' + str(x.GetValue()))
+                            print(('Saving ... ' + settingName + ' = ' + str(x.GetValue())))
                             setting.value = x.GetValue()
                             isDirty = True
                 if isDirty:

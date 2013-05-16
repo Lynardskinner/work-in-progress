@@ -20,11 +20,11 @@ import gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
 def install_locale(domain):
     if os.path.exists('/usr/share/pronterface/locale'):
-        gettext.install(domain, '/usr/share/pronterface/locale', unicode = 1)
+        gettext.install(domain, '/usr/share/pronterface/locale')
     elif os.path.exists('/usr/local/share/pronterface/locale'):
-        gettext.install(domain, '/usr/local/share/pronterface/locale', unicode = 1)
+        gettext.install(domain, '/usr/local/share/pronterface/locale')
     else:
-        gettext.install(domain, './locale', unicode = 1)
+        gettext.install(domain, './locale')
 
 def imagefile(filename):
     for prefix in ['/usr/local/share/pronterface/images', '/usr/share/pronterface/images']:

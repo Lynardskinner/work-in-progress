@@ -55,7 +55,7 @@ class dispframe(wx.Frame):
             if self.slicer == 'Skeinforge':
                 for i in image:
                     #print i
-                    points = [wx.Point(*map(lambda x:int(round(float(x) * self.scale)), j.strip().split())) for j in i.strip().split("M")[1].split("L")]
+                    points = [wx.Point(*[int(round(float(x) * self.scale)) for x in j.strip().split()]) for j in i.strip().split("M")[1].split("L")]
                     dc.DrawPolygon(points, self.size[0] / 2, self.size[1] / 2)
             elif self.slicer == 'Slic3r':
                 gc = wx.GraphicsContext_Create(dc)
@@ -90,12 +90,12 @@ class dispframe(wx.Frame):
         if self.index < len(self.layers):
             i = self.index
 
-            print i
+            print(i)
             wx.CallAfter(self.showimgdelay, self.layers[i])
             wx.FutureCall(1000 * self.interval, self.pic.Hide)
             self.index += 1
         else:
-            print "end"
+            print("end")
             wx.CallAfter(self.pic.Hide)
             wx.CallAfter(self.Refresh)
             wx.CallAfter(self.ShowFullScreen, 0)
@@ -228,8 +228,8 @@ class setframe(wx.Frame):
                 layers = self.parsesvg(name)
                 layerHeight = layers[1]
                 self.thickness.SetValue(str(layers[1]))
-            print "Layer thickness detected:", layerHeight, "mm"
-            print len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm"
+            print("Layer thickness detected:", layerHeight, "mm")
+            print(len(layers[0]), "layers found, total height", layerHeight * len(layers[0]), "mm")
             self.layers = layers
             self.f.slicer = layers[2]
         dlg.Destroy()

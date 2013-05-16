@@ -190,7 +190,7 @@ class GCode(object):
         old_lines += cur_lines
         layers[prev_z] = old_lines
 
-        for idx in layers.keys():
+        for idx in list(layers.keys()):
             cur_lines = layers[idx]
             has_movement = False
             for l in layers[idx]:
@@ -215,7 +215,7 @@ class GCode(object):
         ymax = float("-inf")
         zmax = float("-inf")
 
-        for l in self.layers.values():
+        for l in list(self.layers.values()):
             (xm, xM), (ym, yM), (zm, zM) = l.measure()
             xmin = min(xm, xmin)
             xmax = max(xM, xmax)
@@ -266,7 +266,7 @@ class GCode(object):
         #TODO:
         # get device caps from firmware: max speed, acceleration/axis (including extruder)
         # calculate the maximum move duration accounting for above ;)
-        zs = self.layers.keys()
+        zs = list(self.layers.keys())
         zs.sort()
         for z in zs:
             layer = self.layers[z]
@@ -316,7 +316,7 @@ class GCode(object):
 
 def main():
     if len(sys.argv) < 2:
-        print "usage: %s filename.gcode" % sys.argv[0]
+        print("usage: %s filename.gcode" % sys.argv[0])
         return
 
 #    d = [i.replace("\n","") for i in open(sys.argv[1])]
@@ -325,13 +325,13 @@ def main():
 
     gcode.measure()
 
-    print "Dimensions:"
-    print "\tX: %0.02f - %0.02f (%0.02f)" % (gcode.xmin,gcode.xmax,gcode.width)
-    print "\tY: %0.02f - %0.02f (%0.02f)" % (gcode.ymin,gcode.ymax,gcode.depth)
-    print "\tZ: %0.02f - %0.02f (%0.02f)" % (gcode.zmin,gcode.zmax,gcode.height)
-    print "Filament used: %0.02fmm" % gcode.filament_length()
-    print "Number of layers: %d" % gcode.num_layers()
-    print "Estimated duration (pessimistic): %s" % gcode.estimate_duration()
+    print("Dimensions:")
+    print("\tX: %0.02f - %0.02f (%0.02f)" % (gcode.xmin,gcode.xmax,gcode.width))
+    print("\tY: %0.02f - %0.02f (%0.02f)" % (gcode.ymin,gcode.ymax,gcode.depth))
+    print("\tZ: %0.02f - %0.02f (%0.02f)" % (gcode.zmin,gcode.zmax,gcode.height))
+    print("Filament used: %0.02fmm" % gcode.filament_length())
+    print("Number of layers: %d" % gcode.num_layers())
+    print("Estimated duration (pessimistic): %s" % gcode.estimate_duration())
 
 
 if __name__ == '__main__':

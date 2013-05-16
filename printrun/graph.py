@@ -17,7 +17,7 @@
 
 import wx, random
 
-from bufferedcanvas import *
+from .bufferedcanvas import *
 
 class Graph(BufferedCanvas):
     '''A class to show a Graph with Pronterface.'''
@@ -110,7 +110,7 @@ class Graph(BufferedCanvas):
         for y in range(self.ybars):
             y_pos = y*(float(self.height)/self.ybars)
             dc.DrawLine(0, y_pos, self.width, y_pos)
-            gc.DrawText(unicode(int(self.maxyvalue - (y * (self.maxyvalue/self.ybars)))), 1, y_pos - (font.GetPointSize() / 2))
+            gc.DrawText(str(int(self.maxyvalue - (y * (self.maxyvalue/self.ybars)))), 1, y_pos - (font.GetPointSize() / 2))
 
         if self.timer.IsRunning() == False:
             font = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD)

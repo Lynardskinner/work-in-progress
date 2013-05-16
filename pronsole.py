@@ -28,7 +28,7 @@ install_locale('pronterface')
 
 if os.name == "nt":
     try:
-        import _winreg
+        import winreg
     except:
         pass
 READLINE = True
@@ -45,7 +45,7 @@ def dosify(name):
     return os.path.split(name)[1].split(".")[0][:8]+".g"
 
 def confirm():
-   y_or_n = raw_input("y/n: ")
+   y_or_n = input("y/n: ")
    if y_or_n == "y":
       return True
    elif y_or_n != "n":
@@ -97,12 +97,12 @@ class Settings:
         except AttributeError:
             pass
         try:
-            return getattr(self, "_%s_alias"%key)().keys()
+            return list(getattr(self, "_%s_alias"%key)().keys())
         except AttributeError:
             pass
         return []
     def _all_settings(self):
-        return dict([(k, getattr(self, k)) for k in self.__dict__.keys() if not k.startswith("_")])
+        return dict([(k, getattr(self, k)) for k in list(self.__dict__.keys()) if not k.startswith("_")])
 
 class Status:
 
@@ -186,7 +186,7 @@ class pronsole(cmd.Cmd):
                           "online"   : "%(bold)sT:%(extruder_temp_fancy)s %(progress_fancy)s >%(normal)s "}
 
     def log(self, *msg):
-        print ''.join(str(i) for i in msg)
+        print(''.join(str(i) for i in msg))
 
     def promptf(self):
         """A function to generate prompts so that we can do dynamic prompts. """
@@ -248,10 +248,10 @@ class pronsole(cmd.Cmd):
         baselist = []
         if os.name == "nt":
             try:
-                key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
                 i = 0
                 while(1):
-                    baselist+=[_winreg.EnumValue(key, i)[1]]
+                    baselist+=[winreg.EnumValue(key, i)[1]]
                     i+=1
             except:
                 pass
@@ -277,7 +277,7 @@ class pronsole(cmd.Cmd):
 
     def complete_macro(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
-            return [i for i in self.macros.keys() if i.startswith(text)]
+            return [i for i in list(self.macros.keys()) if i.startswith(text)]
         elif(len(line.split()) == 3 or (len(line.split()) == 2 and line[-1]==" ")):
             return [i for i in ["/D", "/S"] + self.completenames(text) if i.startswith(text)]
         else:
@@ -294,7 +294,7 @@ class pronsole(cmd.Cmd):
         self.cur_macro_def += l + "\n"
 
     def end_macro(self):
-        if self.__dict__.has_key("onecmd"): del self.onecmd # remove override
+        if "onecmd" in self.__dict__: del self.onecmd # remove override
         self.in_macro = False
         self.prompt = self.promptf()
         if self.cur_macro_def!="":
@@ -339,7 +339,7 @@ class pronsole(cmd.Cmd):
             lines = macro_def.split("\n")
             for l in lines:
                 pycode += self.compile_macro_line(l)
-        exec pycode
+        exec(pycode)
         return macro
 
     def start_macro(self, macro_name, prev_definition = "", suppress_instructions = False):
@@ -352,7 +352,7 @@ class pronsole(cmd.Cmd):
         self.prompt = self.promptf()
 
     def delete_macro(self, macro_name):
-        if macro_name in self.macros.keys():
+        if macro_name in list(self.macros.keys()):
             delattr(self.__class__, "do_"+macro_name)
             del self.macros[macro_name]
             self.log("Macro '"+macro_name+"' removed")
@@ -362,7 +362,7 @@ class pronsole(cmd.Cmd):
             self.log("Macro '"+macro_name+"' is not defined")
     def do_macro(self, args):
         if args.strip()=="":
-            self.print_topics("User-defined macros", self.macros.keys(), 15, 80)
+            self.print_topics("User-defined macros", list(self.macros.keys()), 15, 80)
             return
         arglist = args.split(None, 1)
         macro_name = arglist[0]
@@ -381,7 +381,7 @@ class pronsole(cmd.Cmd):
             self.cur_macro_name = macro_name
             self.end_macro()
             return
-        if self.macros.has_key(macro_name):
+        if macro_name in self.macros:
             self.start_macro(macro_name, self.macros[macro_name])
         else:
             self.start_macro(macro_name)
@@ -396,7 +396,7 @@ class pronsole(cmd.Cmd):
         self.log("'macro' without arguments displays list of defined macros")
 
     def subhelp_macro(self, macro_name):
-        if macro_name in self.macros.keys():
+        if macro_name in list(self.macros.keys()):
             macro_def = self.macros[macro_name]
             if "\n" in macro_def:
                 self.log("Macro '"+macro_name+"' defined as:")
@@ -414,7 +414,7 @@ class pronsole(cmd.Cmd):
                 self.save_in_rc("set "+var, "set %s %s" % (var, value))
         except AttributeError:
             self.log("Unknown variable '%s'" % var)
-        except ValueError, ve:
+        except ValueError as ve:
             self.log("Bad value for variable '%s', expecting %s (%s)" % (var, repr(t)[1:-1], ve.args[0]))
 
     def do_set(self, argl):
@@ -520,7 +520,7 @@ class pronsole(cmd.Cmd):
             #    self.log("Saved '"+key+"' to '"+self.rc_filename+"'")
             #else:
             #    self.log("Removed '"+key+"' from '"+self.rc_filename+"'")
-        except Exception, e:
+        except Exception as e:
             self.log("Saving failed for ", key+":", str(e))
         finally:
             del rci, rco
@@ -826,7 +826,7 @@ class pronsole(cmd.Cmd):
         if(tstring!="ok" and not tstring.startswith("ok T") and not tstring.startswith("T:") and not self.listing and not self.monitoring):
             if tstring[:5] == "echo:":
                 tstring = tstring[5:].lstrip()
-            if self.silent == False: print "\r" + tstring.ljust(15)
+            if self.silent == False: print("\r" + tstring.ljust(15))
             sys.stdout.write(self.promptf())
             sys.stdout.flush()
         for i in self.recvlisteners:
@@ -870,10 +870,10 @@ class pronsole(cmd.Cmd):
             self.p.send_now("M105")
             time.sleep(0.75)
             if not self.status.bed_enabled:
-                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
+                print("Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target))
             else:
-                print "Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target)
-                print "Bed:    %s/%s" % (self.status.bed_temp, self.status.bed_temp_target)
+                print("Hotend: %s/%s" % (self.status.extruder_temp, self.status.extruder_temp_target))
+                print("Bed:    %s/%s" % (self.status.bed_temp, self.status.bed_temp_target))
 
     def help_gettemp(self):
         self.log("Read the extruder and bed temperature.")
@@ -881,12 +881,12 @@ class pronsole(cmd.Cmd):
     def do_settemp(self, l):
         try:
             l = l.lower().replace(", ",".")
-            for i in self.temps.keys():
+            for i in list(self.temps.keys()):
                 l = l.replace(i, self.temps[i])
             f = float(l)
             if f>=0:
                 if f > 250:
-                   print f, " is a high temperature to set your extruder to. Are you sure you want to do that?"
+                   print(f, " is a high temperature to set your extruder to. Are you sure you want to do that?")
                    if not confirm():
                       return
                 if self.p.online:
@@ -902,16 +902,16 @@ class pronsole(cmd.Cmd):
     def help_settemp(self):
         self.log("Sets the hotend temperature to the value entered.")
         self.log("Enter either a temperature in celsius or one of the following keywords")
-        self.log(", ".join([i+"("+self.temps[i]+")" for i in self.temps.keys()]))
+        self.log(", ".join([i+"("+self.temps[i]+")" for i in list(self.temps.keys())]))
 
     def complete_settemp(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
-            return [i for i in self.temps.keys() if i.startswith(text)]
+            return [i for i in list(self.temps.keys()) if i.startswith(text)]
 
     def do_bedtemp(self, l):
         try:
             l = l.lower().replace(", ",".")
-            for i in self.bedtemps.keys():
+            for i in list(self.bedtemps.keys()):
                 l = l.replace(i, self.bedtemps[i])
             f = float(l)
             if f>=0:
@@ -928,11 +928,11 @@ class pronsole(cmd.Cmd):
     def help_bedtemp(self):
         self.log("Sets the bed temperature to the value entered.")
         self.log("Enter either a temperature in celsius or one of the following keywords")
-        self.log(", ".join([i+"("+self.bedtemps[i]+")" for i in self.bedtemps.keys()]))
+        self.log(", ".join([i+"("+self.bedtemps[i]+")" for i in list(self.bedtemps.keys())]))
 
     def complete_bedtemp(self, text, line, begidx, endidx):
         if (len(line.split()) == 2 and line[-1] != " ") or (len(line.split()) == 1 and line[-1]==" "):
-            return [i for i in self.bedtemps.keys() if i.startswith(text)]
+            return [i for i in list(self.bedtemps.keys()) if i.startswith(text)]
 
     def do_move(self, l):
         if(len(l.split())<2):
@@ -1066,17 +1066,17 @@ class pronsole(cmd.Cmd):
 
     def do_exit(self, l):
         if self.status.extruder_temp_target != 0:
-            print "Setting extruder temp to 0"
+            print("Setting extruder temp to 0")
         self.p.send_now("M104 S0.0")
         if self.status.bed_enabled:
             if self.status.bed_temp_taret != 0:
-                print "Setting bed temp to 0"
+                print("Setting bed temp to 0")
             self.p.send_now("M140 S0.0")
         self.log("Disconnecting from printer...")
-        print self.p.printing
+        print(self.p.printing)
         if self.p.printing:
-            print "Are you sure you want to exit while printing?"
-            print "(this will terminate the print)."
+            print("Are you sure you want to exit while printing?")
+            print("(this will terminate the print).")
             if not confirm():
                 return False
         self.log("Exiting program. Goodbye!")
@@ -1123,7 +1123,7 @@ class pronsole(cmd.Cmd):
                     sys.stdout.flush()
                 prev_msg_len = len(prev_msg)
         except KeyboardInterrupt:
-            if self.silent == False: print "Done monitoring."
+            if self.silent == False: print("Done monitoring.")
         self.monitoring = 0
 
     def help_monitor(self):
@@ -1160,7 +1160,7 @@ class pronsole(cmd.Cmd):
                 subprocess.call(params)
                 self.log("Loading sliced file.")
                 self.do_load(l[0].replace(".stl", "_export.gcode"))
-        except Exception, e:
+        except Exception as e:
             self.log("Skeinforge execution failed: ", e)
 
     def complete_skein(self, text, line, begidx, endidx):
@@ -1256,14 +1256,14 @@ class pronsole(cmd.Cmd):
                 else:
                     if self.use_rawinput:
                         try:
-                            line = raw_input(self.prompt)
+                            line = input(self.prompt)
                         except EOFError:
-                            print ""
+                            print("")
                             should_exit = self.do_exit("")
                             if should_exit: 
                                 exit()
                         except KeyboardInterrupt:
-                            print ""
+                            print("")
                             line = ""
                     else:
                         self.stdout.write(self.prompt)

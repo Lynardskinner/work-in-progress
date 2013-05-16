@@ -209,5 +209,5 @@ class GCodeAnalyzer():
         
   def print_status(self):
     attrs = vars(self)
-    print '\n'.join("%s: %s" % item for item in attrs.items())
+    print('\n'.join("%s: %s" % item for item in list(attrs.items())))
     

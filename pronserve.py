@@ -21,7 +21,7 @@ import pronsole
 from server import basic_auth
 import random
 import textwrap
-import SocketServer
+import socketserver
 import socket
 import mdns
 import uuid
@@ -133,21 +133,21 @@ class ConstructSocketHandler(tornado.websocket.WebSocketHandler):
   def open(self):
     pronserve.listeners.add(self)
     self.write_message({'connected': {'jobs': pronserve.jobs.public_list()}})
-    print "WebSocket opened. %i sockets currently open." % len(pronserve.listeners)
+    print("WebSocket opened. %i sockets currently open." % len(pronserve.listeners))
 
   def send(self, dict_args = {}, **kwargs):
-    args = dict(dict_args.items() + kwargs.items())
+    args = dict(list(dict_args.items()) + list(kwargs.items()))
     args['timestamp']= time.time()
     self.write_message(args)
 
   def on_message(self, msg):
-    print "message received: %s"%(msg)
+    print("message received: %s"%(msg))
     # TODO: the read bit of repl!
     # self.write_message("You said: " + msg)
 
   def on_close(self):
     pronserve.listeners.remove(self)
-    print "WebSocket closed. %i sockets currently open." % len(pronserve.listeners)
+    print("WebSocket closed. %i sockets currently open." % len(pronserve.listeners))
 
 dir = os.path.dirname(__file__)
 settings = dict(
@@ -226,12 +226,12 @@ class Pronserve(pronsole.pronsole, EventEmitter):
         self.update_job_progress(100)
         self.fire("job_finished", self.jobs.sanitize(self.current_job))
       if len(self.jobs.list) > 0:
-        print "Starting the next print job"
+        print("Starting the next print job")
         self.current_job = self.jobs.list.popleft()
         self.p.startprint(self.current_job['body'].split("\n"))
         self.fire("job_started", self.jobs.sanitize(self.current_job))
       else:
-        print "Finished all print jobs"
+        print("Finished all print jobs")
         self.current_job = None
         self.printing_jobs = False
 
@@ -273,12 +273,12 @@ class Pronserve(pronsole.pronsole, EventEmitter):
 
 
   def _receive_sensor_update(self, l):
-    words = filter(lambda s: s.find(":") > 0, l.split(" "))
+    words = [s for s in l.split(" ") if s.find(":") > 0]
     d = dict([ s.split(":") for s in words])
 
     # print "sensor update received!"
 
-    for key, value in d.iteritems():
+    for key, value in d.items():
       self.__update_sensor(key, value)
 
     self.fire("sensor_changed")
@@ -295,7 +295,7 @@ class Pronserve(pronsole.pronsole, EventEmitter):
   def log(self, *msg):
     msg = ''.join(str(i) for i in msg)
     msg.replace("\r", "")
-    print msg
+    print(msg)
     self.fire("log", {'msg': msg, 'level': "debug"})
 
   def write_prompt(self):
@@ -338,14 +338,14 @@ class PrintJobQueue(EventEmitter):
     self.__last_id += 1
 
     self.list.append(job)
-    print "Added %s"%(original_file_name)
+    print("Added %s"%(original_file_name))
     self.fire("job_added", job)
 
   def display_summary(self):
-    print "Print Jobs:"
+    print("Print Jobs:")
     for job in self.list:
-      print "  %i: %s"%(job['id'], job['original_file_name'])
-    print ""
+      print("  %i: %s"%(job['id'], job['original_file_name']))
+    print("")
     return True
 
   def remove(self, job_id):
@@ -353,7 +353,7 @@ class PrintJobQueue(EventEmitter):
     if job == None:
       return False
     self.list.remove(job)
-    print "Print Job Removed"
+    print("Print Job Removed")
     self.fire("job_removed", job)
 
   def update(self, job_id, job_attrs):
@@ -362,7 +362,7 @@ class PrintJobQueue(EventEmitter):
       return False
     job['rank'] = job_attrs['position']
     self.order()
-    print "Print Job Updated"
+    print("Print Job Updated")
     self.fire("job_updated", job)
 
   def find_by_id(self, job_id):
@@ -379,7 +379,7 @@ class PrintJobQueue(EventEmitter):
 # Server Start Up
 # -------------------------------------------------
 
-print "Pronserve is starting..."
+print("Pronserve is starting...")
 pronserve = Pronserve()
 pronserve.do_connect("")
 
@@ -389,13 +389,13 @@ pronserve.run_print_queue_loop()
 
 if __name__ == "__main__":
     application.listen(8888)
-    print "\n"+"-"*80
-    welcome = textwrap.dedent(u"""
+    print("\n"+"-"*80)
+    welcome = textwrap.dedent("""
               +---+  \x1B[0;32mPronserve: Your printer just got a whole lot better.\x1B[0m
               | \u2713 |  Ready to print.
               +---+  More details at http://localhost:8888/""")
     sys.stdout.write(welcome)
-    print "\n\n" + "-"*80 + "\n"
+    print("\n\n" + "-"*80 + "\n")
 
     try:
       pronserve.ioloop.start()

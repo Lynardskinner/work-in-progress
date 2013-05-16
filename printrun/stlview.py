@@ -17,7 +17,7 @@
 
 import os
 import math
-import stltool
+from . import stltool
 import wx
 from wx import glcanvas
 import time
@@ -215,7 +215,7 @@ class stlview(object):
                 normals.extend(i[0])
 
         # Create a list of triangle indices.
-        indices = range(3 * len(facets))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
+        indices = list(range(3 * len(facets)))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
         #print indices[:10]
         self.vertex_list = batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
@@ -244,7 +244,7 @@ class gcview(object):
         t0 = time.time()
         lines = [self.transform(i) for i in lines]
         lines = [i for i in lines if i is not None]
-        print "transformed lines in %fs" % (time.time() - t0)
+        print("transformed lines in %fs" % (time.time() - t0))
         t0 = time.time()
         layertemp = {}
         lasth = None
@@ -258,7 +258,7 @@ class gcview(object):
                 if lasth is not None:
                     self.layers[lasth] = pyglet.graphics.Batch()
                     lt = layertemp[lasth][0]
-                    indices = range(len(layertemp[lasth][0]) // 3)  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
+                    indices = list(range(len(layertemp[lasth][0]) // 3))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
                     self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -277,26 +277,26 @@ class gcview(object):
                     epoints[j],
                     spoints[(j + 1) % 8],
                     epoints[(j + 1) % 8]
-                ] for j in xrange(8)]
-            normalstoadd = [map(vdiff, v, [S, E, S, E, S, E]) for v in verticestoadd]
+                ] for j in range(8)]
+            normalstoadd = [list(map(vdiff, v, [S, E, S, E, S, E])) for v in verticestoadd]
             v1 = []
-            map(v1.extend, verticestoadd)
+            list(map(v1.extend, verticestoadd))
             v2 = []
-            map(v2.extend, v1)
+            list(map(v2.extend, v1))
             n1 = []
-            map(n1.extend, normalstoadd)
+            list(map(n1.extend, normalstoadd))
             n2 = []
-            map(n2.extend, n1)
+            list(map(n2.extend, n1))
 
             layertemp[i[0][2]][0] += v2
             vertices += v2
             layertemp[i[0][2]][1] += n2
             normals += n2
-        print "appended lines in %fs" % (time.time() - t0)
+        print("appended lines in %fs" % (time.time() - t0))
         t0 = time.time()
 
         # Create a list of triangle indices.
-        indices = range(3 * 16 * len(lines))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
+        indices = list(range(3 * 16 * len(lines)))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
         self.vlists.append(batch.add_indexed(len(vertices) // 3,
                                              GL_TRIANGLES,
                                              None,  # group,
@@ -305,7 +305,7 @@ class gcview(object):
                                              ('n3f/static', normals)))
         if lasth is not None:
             self.layers[lasth] = pyglet.graphics.Batch()
-            indices = range(len(layertemp[lasth][0]))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
+            indices = list(range(len(layertemp[lasth][0])))  # [[3*i, 3*i+1, 3*i+2] for i in xrange(len(facets))]
             self.vlists.append(self.layers[lasth].add_indexed(len(layertemp[lasth][0]) // 3,
                                      GL_TRIANGLES,
                                      None,  # group,
@@ -316,8 +316,8 @@ class gcview(object):
     def genline(self, i, h, w):
         S = i[0][:3]
         E = i[1][:3]
-        v = map(lambda x, y: x - y, E, S)
-        vlen = math.sqrt(float(sum(map(lambda a: a * a, v[:3]))))
+        v = list(map(lambda x, y: x - y, E, S))
+        vlen = math.sqrt(float(sum([a * a for a in v[:3]])))
 
         if vlen == 0:
             vlen = 0.01
@@ -336,23 +336,23 @@ class gcview(object):
                 [sq2 * d, -sq2 * d, 0]
             ]
         axis = stltool.cross([0, 0, 1], v)
-        alen = math.sqrt(float(sum(map(lambda a: a * a, v[:3]))))
+        alen = math.sqrt(float(sum([a * a for a in v[:3]])))
         if alen > 0:
-            axis = map(lambda m: m / alen, axis)
+            axis = [m / alen for m in axis]
             angle = math.acos(v[2] / vlen)
 
             def vrot(v, axis, angle):
                 kxv = stltool.cross(axis, v)
                 kdv = sum(map(lambda x, y: x * y, axis, v))
-                return map(lambda x, y, z: x * math.cos(angle) + y * math.sin(angle) + z * kdv * (1.0 - math.cos(angle)), v, kxv, axis)
+                return list(map(lambda x, y, z: x * math.cos(angle) + y * math.sin(angle) + z * kdv * (1.0 - math.cos(angle)), v, kxv, axis))
 
-            points = map(lambda x: vrot(x, axis, angle), points)
-        points = map(lambda x: [x[0], x[1], htw * x[2]], points)
+            points = [vrot(x, axis, angle) for x in points]
+        points = [[x[0], x[1], htw * x[2]] for x in points]
 
         def vadd(v, o):
-            return map(sum, zip(v, o))
-        spoints = map(lambda x: vadd(S, x), points)
-        epoints = map(lambda x: vadd(E, x), points)
+            return list(map(sum, list(zip(v, o))))
+        spoints = [vadd(S, x) for x in points]
+        epoints = [vadd(E, x) for x in points]
         return spoints, epoints, S, E
 
     def transform(self, line):
@@ -399,8 +399,8 @@ def trackball(p1x, p1y, p2x, p2y, r):
     p2 = [p2x, p2y, project_to_sphere(TRACKBALLSIZE, p2x, p2y)]
     a = stltool.cross(p2, p1)
 
-    d = map(lambda x, y: x - y, p1, p2)
-    t = math.sqrt(sum(map(lambda x: x * x, d))) / (2.0 * TRACKBALLSIZE)
+    d = list(map(lambda x, y: x - y, p1, p2))
+    t = math.sqrt(sum([x * x for x in d])) / (2.0 * TRACKBALLSIZE)
 
     if (t > 1.0):
         t = 1.0
@@ -417,9 +417,9 @@ def vec(*args):
 
 def axis_to_quat(a, phi):
     #print a, phi
-    lena = math.sqrt(sum(map(lambda x: x * x, a)))
-    q = map(lambda x: x * (1 / lena), a)
-    q = map(lambda x: x * math.sin(phi / 2.0), q)
+    lena = math.sqrt(sum([x * x for x in a]))
+    q = [x * (1 / lena) for x in a]
+    q = [x * math.sin(phi / 2.0) for x in q]
     q.append(math.cos(phi / 2.0))
     return q
 
@@ -486,11 +486,11 @@ class TestGlPanel(GLPanel):
     def double(self, event):
         p = event.GetPositionTuple()
         sz = self.GetClientSize()
-        v = map(lambda m, w, b: b * m / w, p, sz, self.bedsize)
+        v = list(map(lambda m, w, b: b * m / w, p, sz, self.bedsize))
         v[1] = self.bedsize[1] - v[1]
         v += [300]
-        print "Double-click at "+str(v)+" in "
-        print self
+        print("Double-click at "+str(v)+" in ")
+        print(self)
 
     def forceresize(self):
         self.SetClientSize((self.GetClientSize()[0], self.GetClientSize()[1] + 1))
@@ -581,7 +581,7 @@ class TestGlPanel(GLPanel):
                 p1[1] *= -1
                 p2[1] *= -1
 
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
+                self.transv = list(map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv))
 
                 glLoadIdentity()
                 glTranslatef(self.transv[0], self.transv[1], 0)
@@ -595,7 +595,7 @@ class TestGlPanel(GLPanel):
             #mouse is moving without a button press
             p = event.GetPositionTuple()
             sz = self.GetClientSize()
-            v = map(lambda m, w, b: b * m / w, p, sz, self.bedsize)
+            v = list(map(lambda m, w, b: b * m / w, p, sz, self.bedsize))
             v[1] = self.bedsize[1] - v[1]
             self.mousepos = v
 
@@ -647,7 +647,7 @@ class TestGlPanel(GLPanel):
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
         keycode = event.GetKeyCode()
-        print keycode
+        print(keycode)
         step = 5
         angle = 18
         if event.ControlDown():
@@ -742,14 +742,14 @@ class TestGlPanel(GLPanel):
         rows = 10
         cols = 10
         zheight = 50
-        for i in xrange(-rows, rows + 1):
+        for i in range(-rows, rows + 1):
             if i % 5 == 0:
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.6, 0.6, 0.6, 1))
             else:
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.2, 0.2, 0.2, 1))
             glVertex3f(10 * -cols, 10 * i, 0)
             glVertex3f(10 * cols, 10 * i, 0)
-        for i in xrange(-cols, cols + 1):
+        for i in range(-cols, cols + 1):
             if i % 5 == 0:
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.6, 0.6, 0.6, 1))
             else:
@@ -794,7 +794,7 @@ class TestGlPanel(GLPanel):
         glPushMatrix()
         glTranslatef(-100, -100, 0)
 
-        for i in self.parent.models.values():
+        for i in list(self.parent.models.values()):
             glPushMatrix()
             glTranslatef(*(i.offsets))
             glRotatef(i.rot, 0.0, 0.0, 1.0)
@@ -803,7 +803,7 @@ class TestGlPanel(GLPanel):
             try:
                 if i.curlayer in i.gc.layers:
                     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.13, 0.37, 0.25, 1))
-                    [i.gc.layers[j].draw() for j in i.gc.layers.keys() if j < i.curlayer]
+                    [i.gc.layers[j].draw() for j in list(i.gc.layers.keys()) if j < i.curlayer]
                     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.5, 0.6, 0.9, 1))
                     b = i.gc.layers[i.curlayer]
                     b.draw()
@@ -879,4 +879,4 @@ def main():
 
 if __name__ == "__main__":
     import cProfile
-    print cProfile.run("main()")
+    print(cProfile.run("main()"))

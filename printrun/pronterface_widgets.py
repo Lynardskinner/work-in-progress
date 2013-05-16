@@ -146,7 +146,7 @@ class options(wx.Dialog):
         topsizer.Layout()
         topsizer.Fit(self)
         if self.ShowModal() == wx.ID_OK:
-            for k, v in pronterface.settings._all_settings().items():
+            for k, v in list(pronterface.settings._all_settings().items()):
                 if ctrls[k, 1].GetValue() != str(v):
                     pronterface.set(k, str(ctrls[k, 1].GetValue()))
         self.Destroy()
@@ -185,9 +185,9 @@ class ButtonEdit(wx.Dialog):
         try:
             if macro == "":
                 valid = True
-            elif self.pronterface.macros.has_key(macro):
+            elif macro in self.pronterface.macros:
                 valid = True
-            elif hasattr(self.pronterface.__class__, u"do_"+macro):
+            elif hasattr(self.pronterface.__class__, "do_"+macro):
                 valid = False
             elif len([c for c in macro if not c.isalnum() and c != "_"]):
                 valid = False
@@ -196,7 +196,7 @@ class ButtonEdit(wx.Dialog):
         except:
             if macro == "":
                 valid = True
-            elif self.pronterface.macros.has_key(macro):
+            elif macro in self.pronterface.macros:
                 valid = True
             elif len([c for c in macro if not c.isalnum() and c != "_"]):
                 valid = False

@@ -21,6 +21,7 @@ from select import error as SelectError
 import time, getopt, sys
 import platform, os
 from GCodeAnalyzer import GCodeAnalyzer
+from functools import reduce
 
 def control_ttyhup(port, disable_hup):
     """Controls the HUPCL"""
@@ -120,19 +121,19 @@ class printcore():
                 if self.recvcb:
                     try: self.recvcb(line)
                     except: pass
-                if self.loud: print "RECV: ", line.rstrip()
+                if self.loud: print("RECV: ", line.rstrip())
             return line
-        except SelectError, e:
+        except SelectError as e:
             if 'Bad file descriptor' in e.args[1]:
-                print "Can't read from printer (disconnected?)."
+                print("Can't read from printer (disconnected?).")
                 return None
             else:
                 raise
-        except SerialException, e:
-            print "Can't read from printer (disconnected?)."
+        except SerialException as e:
+            print("Can't read from printer (disconnected?).")
             return None
-        except OSError, e:
-            print "Can't read from printer (disconnected?)."
+        except OSError as e:
+            print("Can't read from printer (disconnected?).")
             return None
 
     def _listen_can_continue(self):
@@ -201,7 +202,7 @@ class printcore():
         self.clear = True
 
     def _checksum(self, command):
-        return reduce(lambda x, y:x^y, map(ord, command))
+        return reduce(lambda x, y:x^y, list(map(ord, command)))
 
     def startprint(self, data, startindex = 0):
         """Start a print, data is an array of gcode commands.
@@ -312,7 +313,7 @@ class printcore():
                     time.sleep(0.001)
                     wait -= 1
         else:
-            print "Not connected to printer."
+            print("Not connected to printer.")
 
     def send_now(self, command, wait = 0):
         """Sends a command to the printer ahead of the command queue, without a checksum
@@ -332,7 +333,7 @@ class printcore():
                     time.sleep(0.001)
                     wait -= 1
         else:
-            print "Not connected to printer."
+            print("Not connected to printer.")
 
     def _print(self):
         if self.startcb:
@@ -414,14 +415,14 @@ class printcore():
             self.sent.append(command)
             self.analyzer.Analyze(command) # run the command through the analyzer
             if self.loud:
-                print "SENT: ", command
+                print("SENT: ", command)
             if self.sendcb:
                 try: self.sendcb(command)
                 except: pass
             try:
                 self.printer.write(str(command+"\n"))
-            except SerialException, e:
-                print "Can't write to printer (disconnected?)."
+            except SerialException as e:
+                print("Can't write to printer (disconnected?).")
 
 if __name__ == '__main__':
     baud = 115200
@@ -430,13 +431,13 @@ if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:], "h,b:,v,s",
                                    ["help", "baud", "verbose", "statusreport"])
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError as err:
+        print(str(err))
         sys.exit(2)
     for o, a in opts:
         if o in ('-h', '--help'):
             # FIXME: Fix help
-            print "Opts are: --help , -b --baud = baudrate, -v --verbose, -s --statusreport"
+            print("Opts are: --help , -b --baud = baudrate, -v --verbose, -s --statusreport")
             sys.exit(1)
         if o in ('-b', '--baud'):
             baud = int(a)
@@ -448,9 +449,9 @@ if __name__ == '__main__':
     if len (args) > 1:
         port = args[-2]
         filename = args[-1]
-        print "Printing: %s on %s with baudrate %d" % (filename, port, baud)
+        print("Printing: %s on %s with baudrate %d" % (filename, port, baud))
     else:
-        print "Usage: python [-h|-b|-v|-s] printcore.py /dev/tty[USB|ACM]x filename.gcode"
+        print("Usage: python [-h|-b|-v|-s] printcore.py /dev/tty[USB|ACM]x filename.gcode")
         sys.exit(2)
     p = printcore(port, baud)
     p.loud = loud

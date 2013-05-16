@@ -24,7 +24,7 @@
 """
 import wx
 import string
-import urlparse
+import urllib.parse
 from pyparsing import nums, Literal, Optional, oneOf, Group, StringEnd, Combine, Word, alphas, hexnums
 from ..pathdata import number, sign
 
@@ -294,5 +294,5 @@ def fillCSS2SystemColours():
     }
     NamedColours.update(
         #strip the alpha from the system colors. Is this really what we want to do?
-        (k.lower(), wx.SystemSettings.GetColour(v)[:3]) for (k,v) in systemColors.iteritems()
+        (k.lower(), wx.SystemSettings.GetColour(v)[:3]) for (k,v) in systemColors.items()
     )

@@ -14,8 +14,8 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, os, math
-from bufferedcanvas import *
-from printrun_utils import *
+from .bufferedcanvas import *
+from .printrun_utils import *
 
 def sign(n):
     if n < 0: return -1
@@ -138,7 +138,7 @@ class XYButtons(BufferedCanvas):
         return (quadrant, idx)
 
     def mouseOverKeypad(self, mpos):
-        for idx, kpos in XYButtons.keypad_positions.items():
+        for idx, kpos in list(XYButtons.keypad_positions.items()):
             radius = self.distanceToPoint(mpos[0], mpos[1], kpos[0], kpos[1])
             if radius < 9:
                 return idx
@@ -247,7 +247,7 @@ class XYButtons(BufferedCanvas):
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
             gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128+64)))
-            for idx, kpos in XYButtons.label_overlay_positions.items():
+            for idx, kpos in list(XYButtons.label_overlay_positions.items()):
                 if idx != self.concentric:
                     r = kpos[2]
                     gc.DrawEllipse(kpos[0]-r, kpos[1]-r, r*2, r*2)

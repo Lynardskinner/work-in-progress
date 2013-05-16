@@ -18,16 +18,16 @@
 """
 import wx
 
-from cStringIO import StringIO
+from io import StringIO
 import warnings
 import math
 from functools import wraps
 
-import pathdata
-import css
+from . import pathdata
+from . import css
 from svg.css.colour import colourValue
 from svg.css import values
-from attributes import paintValue
+from .attributes import paintValue
 
 document = """<?xml version = "1.0" standalone = "no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
@@ -60,7 +60,7 @@ def valueToPixels(val, defaultUnits = "px"):
     try:
         val, unit = values.length.parseString(val)
     except ParseException:
-        print "***", val
+        print("***", val)
         raise
     #todo: unit conversion to something other than pixels
     return val
@@ -128,7 +128,7 @@ class SVGDocument(object):
         """
         #copy the current state
         current = dict(self.state)
-        current.update(element.items())
+        current.update(list(element.items()))
         current.update(css.inlineStyle(element.get("style", "")))
         self.stateStack.append(current)
         handler = self.handlers.get(element.tag, lambda *any: (None, None))
@@ -389,10 +389,10 @@ class SVGDocument(object):
                 else:
                     arguments = iter(arguments)
                     if command ==  'm':
-                        yield (command, arguments.next())
+                        yield (command, next(arguments))
                         command = "l"
                     elif command == "M":
-                        yield (command, arguments.next())
+                        yield (command, next(arguments))
                         command = "L"
                     for arg in arguments:
                         yield (command, arg)
@@ -574,9 +574,9 @@ class SVGDocument(object):
             path.AddLineToPoint(normalizePoint(arg))
         elif type == 'C':
             #control1, control2, endpoint = arg
-            control1, control2, endpoint = map(
+            control1, control2, endpoint = list(map(
                 normalizePoint, arg
-            )
+            ))
             self.lastControl = control2
             path.AddCurveToPoint(
                 control1,
@@ -592,9 +592,9 @@ class SVGDocument(object):
 
         elif type == 'S':
             #control2, endpoint = arg
-            control2, endpoint = map(
+            control2, endpoint = list(map(
                 normalizePoint, arg
-            )
+            ))
             if self.lastControl:
                 control1 = reflectPoint(self.lastControl, path.GetCurrentPoint())
             else:
@@ -607,7 +607,7 @@ class SVGDocument(object):
                 endpoint
             )
         elif type == "Q":
-            (cx, cy), (x, y) = map(normalizePoint, arg)
+            (cx, cy), (x, y) = list(map(normalizePoint, arg))
             self.lastControlQ = (cx, cy)
             path.AddQuadCurveToPoint(cx, cy, x, y)
         elif type == "T":

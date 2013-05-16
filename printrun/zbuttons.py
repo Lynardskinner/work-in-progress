@@ -14,8 +14,8 @@
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx, os, math
-from bufferedcanvas import *
-from printrun_utils import *
+from .bufferedcanvas import *
+from .printrun_utils import *
 
 def sign(n):
     if n < 0: return -1
@@ -108,7 +108,7 @@ class ZButtons(BufferedCanvas):
             # Draw label overlays
             gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 128), 1))
             gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 128+64)))
-            for idx, kpos in ZButtons.label_overlay_positions.items():
+            for idx, kpos in list(ZButtons.label_overlay_positions.items()):
                 if kpos and idx != self.range:
                     r = kpos[2]
                     gc.DrawEllipse(ZButtons.center[0]-kpos[0]-r, ZButtons.center[1]-kpos[1]-r, r*2, r*2)

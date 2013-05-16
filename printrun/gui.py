@@ -16,7 +16,7 @@
 try:
     import wx
 except:
-    print _("WX is not installed. This program requires WX to run.")
+    print(_("WX is not installed. This program requires WX to run."))
     raise
 
 global buttonSize
@@ -88,13 +88,13 @@ class LeftPane(wx.GridBagSizer):
         root.monitorbox.Bind(wx.EVT_CHECKBOX, root.setmonitor)
 
         self.Add(wx.StaticText(root.panel,-1, _("Heat:")), pos = (2, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
-        htemp_choices = [root.temps[i]+" ("+i+")" for i in sorted(root.temps.keys(), key = lambda x:root.temps[x])]
+        htemp_choices = [root.temps[i]+" ("+i+")" for i in sorted(list(root.temps.keys()), key = lambda x:root.temps[x])]
 
         root.settoff = make_button(root.panel, _("Off"), lambda e: root.do_settemp("off"), _("Switch Hotend Off"), size = (36,-1), style = wx.BU_EXACTFIT)
         root.printerControls.append(root.settoff)
         self.Add(root.settoff, pos = (2, 1), span = (1, 1))
 
-        if root.settings.last_temperature not in map(float, root.temps.values()):
+        if root.settings.last_temperature not in list(map(float, list(root.temps.values()))):
             htemp_choices = [str(root.settings.last_temperature)] + htemp_choices
         root.htemp = wx.ComboBox(root.panel, -1,
                 choices = htemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
@@ -107,13 +107,13 @@ class LeftPane(wx.GridBagSizer):
         self.Add(root.settbtn, pos = (2, 4), span = (1, 1))
 
         self.Add(wx.StaticText(root.panel,-1, _("Bed:")), pos = (3, 0), span = (1, 1), flag = wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
-        btemp_choices = [root.bedtemps[i]+" ("+i+")" for i in sorted(root.bedtemps.keys(), key = lambda x:root.temps[x])]
+        btemp_choices = [root.bedtemps[i]+" ("+i+")" for i in sorted(list(root.bedtemps.keys()), key = lambda x:root.temps[x])]
 
         root.setboff = make_button(root.panel, _("Off"), lambda e:root.do_bedtemp("off"), _("Switch Heated Bed Off"), size = (36,-1), style = wx.BU_EXACTFIT)
         root.printerControls.append(root.setboff)
         self.Add(root.setboff, pos = (3, 1), span = (1, 1))
 
-        if root.settings.last_bed_temperature not in map(float, root.bedtemps.values()):
+        if root.settings.last_bed_temperature not in list(map(float, list(root.bedtemps.values()))):
             btemp_choices = [str(root.settings.last_bed_temperature)] + btemp_choices
         root.btemp = wx.ComboBox(root.panel, -1,
                 choices = btemp_choices, style = wx.CB_DROPDOWN, size = (70,-1))
@@ -207,7 +207,7 @@ class LogPane(wx.BoxSizer):
         root.commandbox.SetToolTip(wx.ToolTip("Send commands to printer\n(Type 'help' for simple\nhelp function)"))
         root.commandbox.Bind(wx.EVT_TEXT_ENTER, root.sendline)
         root.commandbox.Bind(wx.EVT_CHAR, root.cbkey)
-        root.commandbox.history = [u""]
+        root.commandbox.history = [""]
         root.commandbox.histindex = 1
         #root.printerControls.append(root.commandbox)
         lbrs.Add(root.commandbox, 1)

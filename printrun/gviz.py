@@ -15,7 +15,7 @@
 import wx, time
 from printrun import gcoder
 
-from printrun_utils import imagefile
+from .printrun_utils import imagefile
 
 ID_ABOUT = 101
 ID_EXIT = 110
@@ -149,7 +149,7 @@ class gviz(wx.Panel):
         self.arcpen = wx.Pen(wx.Colour(255, 0, 0), penwidth)
         self.travelpen = wx.Pen(wx.Colour(10, 80, 80), penwidth)
         self.hlpen = wx.Pen(wx.Colour(200, 50, 50), penwidth)
-        self.fades = [wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50), penwidth) for i in xrange(6)]
+        self.fades = [wx.Pen(wx.Colour(250-0.6**i*100, 250-0.6**i*100, 200-0.4**i*50), penwidth) for i in range(6)]
         self.penslist = [self.mainpen, self.travelpen, self.hlpen]+self.fades
         self.showall = 0
         self.hilight = []
@@ -159,8 +159,8 @@ class gviz(wx.Panel):
 
     def inject(self):
         #import pdb; pdb.set_trace()
-        print"Inject code here..."
-        print  "Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm"
+        print("Inject code here...")
+        print("Layer "+str(self.layerindex +1)+" - Z = "+str(self.layers[self.layerindex])+" mm")
 
     def clear(self):
         self.lastpos = [0, 0, 0, 0, 0, 0, 0]
@@ -233,9 +233,9 @@ class gviz(wx.Panel):
         dc.SetPen(wx.Pen(wx.Colour(180, 180, 150)))
         for grid_unit in self.grid:
             if grid_unit > 0:
-                for x in xrange(int(self.build_dimensions[0]/grid_unit)+1):
+                for x in range(int(self.build_dimensions[0]/grid_unit)+1):
                     dc.DrawLine(self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1], self.translate[0]+x*self.scale[0]*grid_unit, self.translate[1]+self.scale[1]*self.build_dimensions[1])
-                for y in xrange(int(self.build_dimensions[1]/grid_unit)+1):
+                for y in range(int(self.build_dimensions[1]/grid_unit)+1):
                     dc.DrawLine(self.translate[0], self.translate[1]+y*self.scale[1]*grid_unit, self.translate[0]+self.scale[0]*self.build_dimensions[0], self.translate[1]+y*self.scale[1]*grid_unit)
             dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
         if not self.showall:
@@ -251,7 +251,7 @@ class gviz(wx.Panel):
                         self.scale[1]*x[1]+self.translate[1],
                         self.scale[0]*x[2]+self.translate[0],
                         self.scale[1]*x[3]+self.translate[1],)
-            scaled_lines = map(_scaler, lines)
+            scaled_lines = list(map(_scaler, lines))
             dc.DrawLineList(scaled_lines, pens)
 
         def _drawarcs(arcs, pens):
@@ -262,7 +262,7 @@ class gviz(wx.Panel):
                         self.scale[1]*x[3]+self.translate[1],
                         self.scale[0]*x[4]+self.translate[0],
                         self.scale[1]*x[5]+self.translate[1],)
-            scaled_arcs = map(_scaler, arcs)
+            scaled_arcs = list(map(_scaler, arcs))
             for i in range(len(scaled_arcs)):
                 dc.SetPen(pens[i] if type(pens).__name__ == 'list' else pens)
                 dc.SetBrush(wx.TRANSPARENT_BRUSH)
@@ -275,8 +275,8 @@ class gviz(wx.Panel):
                 _drawlines(self.lines[i], self.pens[i])
                 _drawarcs(self.arcs[i], self.arcpens[i])
             return
-        if self.layerindex<len(self.layers) and self.layers[self.layerindex] in self.lines.keys():
-            for layer_i in xrange(max(0, self.layerindex-6), self.layerindex):
+        if self.layerindex<len(self.layers) and self.layers[self.layerindex] in list(self.lines.keys()):
+            for layer_i in range(max(0, self.layerindex-6), self.layerindex):
                 #print i, self.layerindex, self.layerindex-i
                 _drawlines(self.lines[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])
                 _drawarcs(self.arcs[self.layers[layer_i]], self.fades[self.layerindex-layer_i-1])

@@ -38,7 +38,7 @@ def float_input(prompt=''):
     import sys
     f = None
     while f == None:
-        s = raw_input(prompt)
+        s = input(prompt)
         try:
             f = float(s)
         except ValueError:
@@ -54,7 +54,7 @@ def wait(t, m=''):
             sys.stdout.write(s)
             sys.stdout.flush()
             time.sleep(1.0/5)
-    print
+    print()
 def w(s):
     sys.stdout.write(s)
     sys.stdout.flush()
@@ -73,9 +73,9 @@ def heatup(p, temp, s = 0):
             time.sleep(1.5)
             f = True
         curtemp = gettemp(p)
-        if curtemp: w(u"\rHeating extruder up.. %3d \xb0C"%curtemp)
-    if s: print
-    else: print "\nReady."
+        if curtemp: w("\rHeating extruder up.. %3d \xb0C"%curtemp)
+    if s: print()
+    else: print("\nReady.")
 
 def gettemp(p):
     try: p.logl
@@ -87,14 +87,14 @@ def gettemp(p):
         if 'T:' in line:
             try:
                 setattr(p,'temp',int(line.split('T:')[1].split()[0]))
-            except: print line
+            except: print(line)
     p.logl = len(p.log)
     return p.temp
 if not os.path.exists(port):
     port = 0
 
 #Parse options
-help = u"""
+help = """
 %s [ -l DISTANCE ] [ -s STEPS ] [ -t TEMP ] [ -p PORT ]
         -l      --length        Length of filament to extrude for each calibration step (default: %d mm)
         -s      --steps         Initial amount of steps to use (default: %d steps)
@@ -104,13 +104,13 @@ help = u"""
 """[1:-1].encode('utf-8')%(sys.argv[0], n, k, temp, tempmax, port if port else 'auto')
 try:
     opts, args = getopt.getopt(sys.argv[1:],"hl:s:t:p:",["help", "length=", "steps=", "temp=", "port="])
-except getopt.GetoptError, err:
-    print str(err)
-    print help
+except getopt.GetoptError as err:
+    print(str(err))
+    print(help)
     sys.exit(2)
 for o, a in opts:
     if o in ('-h','--help'):
-        print help
+        print(help)
         sys.exit()
     elif o in ('-l','--length'):
         n = float(a)
@@ -119,17 +119,17 @@ for o, a in opts:
     elif o in ('-t','--temp'):
         temp = int(a)
         if temp>=tempmax:
-            print (u'%d \xb0C? Are you insane?'.encode('utf-8')%temp)+(" That's over nine thousand!" if temp>9000 else '')
+            print(('%d \xb0C? Are you insane?'.encode('utf-8')%temp)+(" That's over nine thousand!" if temp>9000 else ''))
             sys.exit(255)
     elif o in ('-p','--port'):
         port = a
 
 #Show initial parameters
-print "Initial parameters"
-print "Steps per mm:    %3d steps"%k
-print "Length extruded: %3d mm"%n
-print
-print "Serial port:     %s"%(port if port else 'auto')
+print("Initial parameters")
+print("Steps per mm:    %3d steps"%k)
+print("Length extruded: %3d mm"%n)
+print()
+print("Serial port:     %s"%(port if port else 'auto'))
 
 p = None
 try:
@@ -138,12 +138,12 @@ try:
     try:
         p = printcore(port, 115200)
     except:
-        print 'Error.'
+        print('Error.')
         raise
     while not p.online:
         time.sleep(1)
         w('.')
-    print " connected."
+    print(" connected.")
 
     heatup(p, temp)
 
@@ -158,8 +158,8 @@ try:
         if n!=m:
             k = (n/m)*k
             p.send_now("M92 E%d"%int(round(k)))     #Set new step count
-            print "Steps per mm:    %3d steps"%k    #Tell user
-    print 'Calibration completed.'  #Yay!
+            print("Steps per mm:    %3d steps"%k)    #Tell user
+    print('Calibration completed.')  #Yay!
 except KeyboardInterrupt:
     pass
 finally:

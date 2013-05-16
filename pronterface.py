@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Printrun.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, Queue, re
+import os, queue, re
 
 from printrun.printrun_utils import install_locale
 install_locale('pronterface')
@@ -23,9 +23,9 @@ install_locale('pronterface')
 try:
     import wx
 except:
-    print _("WX is not installed. This program requires WX to run.")
+    print(_("WX is not installed. This program requires WX to run."))
     raise
-import sys, glob, time, datetime, threading, traceback, cStringIO, subprocess
+import sys, glob, time, datetime, threading, traceback, io, subprocess
 
 from printrun.pronterface_widgets import *
 from serial import SerialException
@@ -37,7 +37,7 @@ layerindex = 0
 if os.name == "nt":
     winsize = (800, 530)
     try:
-        import _winreg
+        import winreg
     except:
         pass
 
@@ -120,7 +120,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.skeinp = None
         self.monitor_interval = 3
         self.paused = False
-        self.sentlines = Queue.Queue(30)
+        self.sentlines = queue.Queue(30)
         self.cpbuttons = [
             SpecialButton(_("Motors off"), ("M84"), (250, 250, 250), None, 0, _("Switch all motors off")),
             SpecialButton(_("Check temp"), ("M105"), (225, 200, 200), (2, 5), (1, 1), _("Check current hotend temperature")),
@@ -158,22 +158,22 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.panel.SetBackgroundColour(self.settings.bgcolor)
         customdict = {}
         try:
-            execfile(configfile("custombtn.txt"), customdict)
+            exec(compile(open(configfile("custombtn.txt")).read(), configfile("custombtn.txt"), 'exec'), customdict)
             if len(customdict["btns"]):
                 if not len(self.custombuttons):
                     try:
                         self.custombuttons = customdict["btns"]
-                        for n in xrange(len(self.custombuttons)):
+                        for n in range(len(self.custombuttons)):
                             self.cbutton_save(n, self.custombuttons[n])
                         os.rename("custombtn.txt", "custombtn.old")
                         rco = open("custombtn.txt", "w")
                         rco.write(_("# I moved all your custom buttons into .pronsolerc.\n# Please don't add them here any more.\n# Backup of your old buttons is in custombtn.old\n"))
                         rco.close()
-                    except IOError, x:
-                        print str(x)
+                    except IOError as x:
+                        print(str(x))
                 else:
-                    print _("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc")
-                    print _("Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt")
+                    print(_("Note!!! You have specified custom buttons in both custombtn.txt and .pronsolerc"))
+                    print(_("Ignoring custombtn.txt. Remove all current buttons to revert to custombtn.txt"))
 
         except:
             pass
@@ -200,13 +200,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def startcb(self):
         self.starttime = time.time()
-        print "Print Started at: " + format_time(self.starttime)
+        print("Print Started at: " + format_time(self.starttime))
 
     def endcb(self):
         if self.p.queueindex == 0:
             print_duration = int(time.time () - self.starttime + self.extra_print_time)
-            print _("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
-                                                                             "duration": format_duration(print_duration)}
+            print(_("Print ended at: %(end_time)s and took %(duration)s") % {"end_time": format_time(time.time()),
+                                                                             "duration": format_duration(print_duration)})
             wx.CallAfter(self.pausebtn.Disable)
             wx.CallAfter(self.printbtn.SetLabel, _("Print"))
 
@@ -220,7 +220,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.finalp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
 
     def online(self):
-        print _("Printer is now online.")
+        print(_("Printer is now online."))
         self.connectbtn.SetLabel(_("Disconnect"))
         self.connectbtn.SetToolTip(wx.ToolTip("Disconnect from the printer"))
         self.connectbtn.Bind(wx.EVT_BUTTON, self.disconnect)
@@ -277,7 +277,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_extrude(self, l = ""):
         try:
-            if not l.__class__ in (str, unicode) or not len(l):
+            if not l.__class__ in (str, str) or not len(l):
                 l = str(self.edist.GetValue())
             pronsole.pronsole.do_extrude(self, l)
         except:
@@ -285,7 +285,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_reverse(self, l = ""):
         try:
-            if not l.__class__ in (str, unicode) or not len(l):
+            if not l.__class__ in (str, str) or not len(l):
                 l = str(- float(self.edist.GetValue()))
             pronsole.pronsole.do_extrude(self, l)
         except:
@@ -331,43 +331,43 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def do_settemp(self, l = ""):
         try:
-            if not l.__class__ in (str, unicode) or not len(l):
+            if not l.__class__ in (str, str) or not len(l):
                 l = str(self.htemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
-            for i in self.temps.keys():
+            for i in list(self.temps.keys()):
                 l = l.replace(i, self.temps[i])
             f = float(l)
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
-                    print _("Setting hotend temperature to %f degrees Celsius.") % f
+                    print(_("Setting hotend temperature to %f degrees Celsius.") % f)
                     self.sethotendgui(f)
                 else:
-                    print _("Printer is not online.")
+                    print(_("Printer is not online."))
             else:
-                print _("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0.")
-        except Exception, x:
-            print _("You must enter a temperature. (%s)") % (repr(x),)
+                print(_("You cannot set negative temperatures. To turn the hotend off entirely, set its temperature to 0."))
+        except Exception as x:
+            print(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def do_bedtemp(self, l = ""):
         try:
-            if not l.__class__ in (str, unicode) or not len(l):
+            if not l.__class__ in (str, str) or not len(l):
                 l = str(self.btemp.GetValue().split()[0])
             l = l.lower().replace(", ", ".")
-            for i in self.bedtemps.keys():
+            for i in list(self.bedtemps.keys()):
                 l = l.replace(i, self.bedtemps[i])
             f = float(l)
             if f >= 0:
                 if self.p.online:
                     self.p.send_now("M140 S"+l)
-                    print _("Setting bed temperature to %f degrees Celsius.") % f
+                    print(_("Setting bed temperature to %f degrees Celsius.") % f)
                     self.setbedgui(f)
                 else:
-                    print _("Printer is not online.")
+                    print(_("Printer is not online."))
             else:
-                print _("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0.")
-        except Exception, x:
-            print _("You must enter a temperature. (%s)") % (repr(x),)
+                print(_("You cannot set negative temperatures. To turn the bed off entirely, set its temperature to 0."))
+        except Exception as x:
+            print(_("You must enter a temperature. (%s)") % (repr(x),))
 
     def end_macro(self):
         pronsole.pronsole.end_macro(self)
@@ -386,7 +386,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                         if dialog.ShowModal() == wx.ID_YES:
                             self.delete_macro(macro_name)
                             return
-                    print _("Cancelled.")
+                    print(_("Cancelled."))
                     return
                 self.cur_macro_name = macro_name
                 self.cur_macro_def = definition
@@ -399,7 +399,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.capture_skip_newline and len(l) and not len(l.strip("\n\r")):
             self.capture_skip_newline = False
             return
-        for pat in self.capture_skip.keys():
+        for pat in list(self.capture_skip.keys()):
             if self.capture_skip[pat] > 0 and pat.match(l):
                 self.capture_skip[pat] -= 1
                 self.capture_skip_newline = True
@@ -411,10 +411,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         baselist = []
         if os.name == "nt":
             try:
-                key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "HARDWARE\\DEVICEMAP\\SERIALCOMM")
                 i = 0
                 while True:
-                    baselist += [_winreg.EnumValue(key, i)[1]]
+                    baselist += [winreg.EnumValue(key, i)[1]]
                     i += 1
             except:
                 pass
@@ -425,7 +425,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         if self.p.online:
             projectlayer.setframe(self,self.p).Show()
         else:
-            print _("Printer is not online.")
+            print(_("Printer is not online."))
 
     def popmenu(self):
         self.menustrip = wx.MenuBar()
@@ -498,13 +498,13 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def edit_macro(self, macro):
         if macro == "": return self.new_macro()
-        if self.macros.has_key(macro):
+        if macro in self.macros:
             old_def = self.macros[macro]
         elif len([c for c in macro.encode("ascii", "replace") if not c.isalnum() and c != "_"]):
-            print _("Macro name may contain only ASCII alphanumeric symbols and underscores")
+            print(_("Macro name may contain only ASCII alphanumeric symbols and underscores"))
             return
         elif hasattr(self.__class__, "do_"+macro):
-            print _("Name '%s' is being used by built-in command") % macro
+            print(_("Name '%s' is being used by built-in command") % macro)
             return
         else:
             old_def = ""
@@ -521,7 +521,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.macros_menu.DeleteItem(item)
         except:
             pass
-        for macro in self.macros.keys():
+        for macro in list(self.macros.keys()):
             self.Bind(wx.EVT_MENU, lambda x, m = macro: self.start_macro(m, self.macros[m]), self.macros_menu.Append(-1, macro))
 
     def OnExit(self, event):
@@ -562,11 +562,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def plate(self, e):
         import plater
-        print "plate function activated"
+        print("plate function activated")
         plater.stlwin(size = (800, 580), callback = self.platecb, parent = self).Show()
 
     def platecb(self, name):
-        print "plated: "+name
+        print("plated: "+name)
         self.loadfile(None, name)
 
     def sdmenu(self, e):
@@ -645,7 +645,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             newbuttonbuttonindex -= 1
         while len(self.custombuttons) < 13:
             self.custombuttons.append(None)
-        for i in xrange(len(self.custombuttons)):
+        for i in range(len(self.custombuttons)):
             btndef = self.custombuttons[i]
             try:
                 b = wx.Button(self.panel, -1, btndef.label, style = wx.BU_EXACTFIT)
@@ -682,7 +682,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.mainsizer.Layout()
 
     def help_button(self):
-        print _('Defines custom button. Usage: button <num> "title" [/c "colour"] command')
+        print(_('Defines custom button. Usage: button <num> "title" [/c "colour"] command'))
 
     def do_button(self, argstr):
         def nextarg(rest):
@@ -704,7 +704,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             pass
         command = argstr.strip()
         if num<0 or num>=64:
-            print _("Custom button number should be between 0 and 63")
+            print(_("Custom button number should be between 0 and 63"))
             return
         while num >= len(self.custombuttons):
             self.custombuttons.append(None)
@@ -723,10 +723,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.save_in_rc(("button %d" % n),'')
         elif bdef.background:
             colour = bdef.background
-            if type(colour) not in (str, unicode):
+            if type(colour) not in (str, str):
                 #print type(colour), map(type, colour)
                 if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                    colour = map(lambda x:x%256, colour)
+                    colour = [x%256 for x in colour]
                     colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
                 else:
                     colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
@@ -742,10 +742,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             bedit.command.SetValue(button.properties.command)
             if button.properties.background:
                 colour = button.properties.background
-                if type(colour) not in (str, unicode):
+                if type(colour) not in (str, str):
                     #print type(colour)
                     if type(colour) == tuple and tuple(map(type, colour)) == (int, int, int):
-                        colour = map(lambda x:x%256, colour)
+                        colour = [x%256 for x in colour]
                         colour = wx.Colour(*colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
                     else:
                         colour = wx.Colour(colour).GetAsString(wx.C2S_NAME|wx.C2S_HTML_SYNTAX)
@@ -969,7 +969,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.onecmd(e.GetEventObject().properties.command)
             self.cur_button = None
         except:
-            print _("event object missing")
+            print(_("event object missing"))
             self.cur_button = None
             raise
 
@@ -1000,12 +1000,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.monitor_interval = float(l)
                 wx.CallAfter(self.monitorbox.SetValue, self.monitor_interval>0)
             except:
-                print _("Invalid period given.")
+                print(_("Invalid period given."))
         self.setmonitor(None)
         if self.monitor:
-            print _("Monitoring printer.")
+            print(_("Monitoring printer."))
         else:
-            print _("Done monitoring.")
+            print(_("Done monitoring."))
 
     def setmonitor(self, e):
         self.monitor = self.monitorbox.GetValue()
@@ -1018,7 +1018,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         try:
             self.logbox.AppendText(text)
         except:
-            print _("Attempted to write invalid text to console, which could be due to an invalid baudrate")
+            print(_("Attempted to write invalid text to console, which could be due to an invalid baudrate"))
 
     def setloud(self,e):
         self.p.loud=e.IsChecked()
@@ -1090,7 +1090,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except:
             pass
         if cout is None:
-            cout = cStringIO.StringIO()
+            cout = io.StringIO()
 
         sys.stdout = cout
         retval = None
@@ -1180,7 +1180,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         try:
             import shlex
             param = self.expandcommand(self.settings.slicecommand).encode()
-            print "Slicing: ", param
+            print("Slicing: ", param)
             pararray = [i.replace("$s", self.filename).replace("$o", self.filename.replace(".stl", "_export.gcode").replace(".STL", "_export.gcode")).encode() for i in shlex.split(param.replace("\\", "\\\\").encode())]
                 #print pararray
             self.skeinp = subprocess.Popen(pararray, stderr = subprocess.STDOUT, stdout = subprocess.PIPE)
@@ -1191,7 +1191,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.skeinp.wait()
             self.stopsf = 1
         except:
-            print _("Failed to execute slicing software: ")
+            print(_("Failed to execute slicing software: "))
             self.stopsf = 1
             traceback.print_exc(file = sys.stdout)
 
@@ -1224,7 +1224,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
 
     def skein(self, filename):
         wx.CallAfter(self.loadbtn.SetLabel, _("Cancel"))
-        print _("Slicing ") + filename
+        print(_("Slicing ") + filename)
         self.cout = StringIO.StringIO()
         self.filename = filename
         self.stopsf = 0
@@ -1283,11 +1283,11 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     def loadviz(self):
         gcode = gcoder.GCode(self.f)
         gcode.measure()
-        print gcode.filament_length(), _("mm of filament used in this print\n")
-        print _("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (gcode.xmin, gcode.xmax, gcode.width)
-        print _("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (gcode.ymin, gcode.ymax, gcode.depth)
-        print _("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (gcode.zmin, gcode.zmax, gcode.height)
-        print _("Estimated duration (pessimistic): "), gcode.estimate_duration()
+        print(gcode.filament_length(), _("mm of filament used in this print\n"))
+        print(_("the print goes from %f mm to %f mm in X\nand is %f mm wide\n") % (gcode.xmin, gcode.xmax, gcode.width))
+        print(_("the print goes from %f mm to %f mm in Y\nand is %f mm wide\n") % (gcode.ymin, gcode.ymax, gcode.depth))
+        print(_("the print goes from %f mm to %f mm in Z\nand is %f mm high\n") % (gcode.zmin, gcode.zmax, gcode.height))
+        print(_("Estimated duration (pessimistic): "), gcode.estimate_duration())
         #import time
         #t0 = time.time()
         self.gviz.clear()
@@ -1353,7 +1353,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
             self.recvlisteners+=[self.uploadtrigger]
 
     def pause(self, event):
-        print _("Paused.")
+        print(_("Paused."))
         if not self.paused:
             if self.sdprinting:
                 self.p.send_now("M25")
@@ -1380,7 +1380,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         threading.Thread(target = self.getfiles).start()
 
     def connect(self, event):
-        print _("Connecting...")
+        print(_("Connecting..."))
         port = None
         try:
             port = self.scanserial()[0]
@@ -1406,12 +1406,12 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         except SerialException as e:
             # Currently, there is no errno, but it should be there in the future
             if e.errno == 2:
-                print _("Error: You are trying to connect to a non-exisiting port.")
+                print(_("Error: You are trying to connect to a non-exisiting port."))
             elif e.errno == 8:
-                print _("Error: You don't have permission to open %s.") % port
-                print _("You might need to add yourself to the dialout group.")
+                print(_("Error: You don't have permission to open %s.") % port)
+                print(_("You might need to add yourself to the dialout group."))
             else:
-                print e
+                print(e)
             # Kill the scope anyway
             return
         self.statuscheck = True
@@ -1442,7 +1442,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         self.predisconnect_layer = self.curlayer
 
     def disconnect(self, event):
-        print _("Disconnected.")
+        print(_("Disconnected."))
         if self.p.printing or self.p.paused or self.paused:
             self.store_predisconnect_state()
         self.p.disconnect()
@@ -1475,7 +1475,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
                 self.p.send_now("M26 S0")
 
     def reset(self, event):
-        print _("Reset.")
+        print(_("Reset."))
         dlg = wx.MessageDialog(self, _("Are you sure you want to reset the printer?"), _("Reset?"), wx.YES|wx.NO)
         if dlg.ShowModal() == wx.ID_YES:
             self.p.reset()

@@ -26,7 +26,7 @@ pyglet.options['shadow_window'] = False
 pyglet.options['debug_gl'] = False
 from pyglet.gl import *
 
-import stltool
+from . import stltool
 
 import threading
 
@@ -258,7 +258,7 @@ class gcline(object):
         self.calc_len()
 
     def __str__(self):
-        return u"line from %s,%s,%s to %s,%s,%s with extrusion ratio %s and feedrate %s\n%s" % (
+        return "line from %s,%s,%s to %s,%s,%s with extrusion ratio %s and feedrate %s\n%s" % (
                 self.prev_gcline.x,
                 self.prev_gcline.y,
                 self.prev_gcline.z,
@@ -338,18 +338,18 @@ class gcThreadRenderer(threading.Thread):
         threading.Thread.__init__(self)
         self.gcview = gcview
         self.lines = lines
-        print "q init"
+        print("q init")
 
     def run(self):
         for line in self.lines:
             layer_name = line.z
             if line.z not in self.gcview.layers:
                 self.gcview.layers[line.z] = pyglet.graphics.Batch()
-                self.gcview.layerlist = self.gcview.layers.keys()
+                self.gcview.layerlist = list(self.gcview.layers.keys())
                 self.gcview.layerlist.sort()
             self.gcview.layers[line.z].add(2, GL_LINES, None, ("v3f", line.glline()), ("c3B", line.glcolor(self.gcview.upper_limit, self.gcview.lower_limit, self.gcview.max_feedrate)))
         self.gcview.t2 = time.time()
-        print "Rendered lines in %fs" % (self.gcview.t2-self.gcview.t1)
+        print("Rendered lines in %fs" % (self.gcview.t2-self.gcview.t1))
 
 class gcview(object):
     """gcode visualiser
@@ -358,7 +358,7 @@ class gcview(object):
     def __init__(self, lines, batch, w = 0.5, h = 0.5):
         if len(lines) == 0:
             return
-        print "Loading %s lines" % (len(lines))
+        print("Loading %s lines" % (len(lines)))
         #End pos of previous mode
         self.prev = gcpoint()
         # Correction for G92 moves
@@ -369,7 +369,7 @@ class gcview(object):
         lines = [self.transform(i) for i in lines]
         lines = [i for i in lines if i is not None]
         self.t1 = time.time()
-        print "transformed %s lines in %fs" % (len(lines), self.t1- self.t0)
+        print("transformed %s lines in %fs" % (len(lines), self.t1- self.t0))
         self.upper_limit = 0
         self.lower_limit = None
         self.max_feedrate = 0
@@ -472,8 +472,8 @@ def trackball(p1x, p1y, p2x, p2y, r):
     p2 = [p2x, p2y, project_to_sphere(TRACKBALLSIZE, p2x, p2y)]
     a = stltool.cross(p2, p1)
 
-    d = map(lambda x, y: x - y, p1, p2)
-    t = math.sqrt(sum(map(lambda x: x * x, d))) / (2.0 * TRACKBALLSIZE)
+    d = list(map(lambda x, y: x - y, p1, p2))
+    t = math.sqrt(sum([x * x for x in d])) / (2.0 * TRACKBALLSIZE)
 
     if (t > 1.0):
         t = 1.0
@@ -490,9 +490,9 @@ def vec(*args):
 
 def axis_to_quat(a, phi):
     #print a, phi
-    lena = math.sqrt(sum(map(lambda x: x * x, a)))
-    q = map(lambda x: x * (1 / lena), a)
-    q = map(lambda x: x * math.sin(phi / 2.0), q)
+    lena = math.sqrt(sum([x * x for x in a]))
+    q = [x * (1 / lena) for x in a]
+    q = [x * math.sin(phi / 2.0) for x in q]
     q.append(math.cos(phi / 2.0))
     return q
 
@@ -559,10 +559,10 @@ class TestGlPanel(GLPanel):
     def double(self, event):
         p = event.GetPositionTuple()
         sz = self.GetClientSize()
-        v = map(lambda m, w, b: b * m / w, p, sz, self.bedsize)
+        v = list(map(lambda m, w, b: b * m / w, p, sz, self.bedsize))
         v[1] = self.bedsize[1] - v[1]
         v += [300]
-        print v
+        print(v)
         self.add_file("../prusa/metric-prusa/x-end-idler.stl", v)
 
     def forceresize(self):
@@ -654,7 +654,7 @@ class TestGlPanel(GLPanel):
                 p1[1] *= -1
                 p2[1] *= -1
 
-                self.transv = map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv)
+                self.transv = list(map(lambda x, y, z, c: c - self.dist * (x - y) / z,  list(p1) + [0],  list(p2) + [0],  list(sz) + [1],  self.transv))
 
                 glLoadIdentity()
                 glTranslatef(self.transv[0], self.transv[1], 0)
@@ -668,7 +668,7 @@ class TestGlPanel(GLPanel):
             #mouse is moving without a button press
             p = event.GetPositionTuple()
             sz = self.GetClientSize()
-            v = map(lambda m, w, b: b * m / w, p, sz, self.bedsize)
+            v = list(map(lambda m, w, b: b * m / w, p, sz, self.bedsize))
             v[1] = self.bedsize[1] - v[1]
             self.mousepos = v
 
@@ -720,7 +720,7 @@ class TestGlPanel(GLPanel):
     def keypress(self, event):
         """gets keypress events and moves/rotates acive shape"""
         keycode = event.GetKeyCode()
-        print keycode
+        print(keycode)
         step = 5
         angle = 18
         if event.ControlDown():
@@ -815,14 +815,14 @@ class TestGlPanel(GLPanel):
         rows = 10
         cols = 10
         zheight = 50
-        for i in xrange(-rows, rows + 1):
+        for i in range(-rows, rows + 1):
             if i % 5 == 0:
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.6, 0.6, 0.6, 1))
             else:
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.2, 0.2, 0.2, 1))
             glVertex3f(10 * -cols, 10 * i, 0)
             glVertex3f(10 * cols, 10 * i, 0)
-        for i in xrange(-cols, cols + 1):
+        for i in range(-cols, cols + 1):
             if i % 5 == 0:
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, vec(0.6, 0.6, 0.6, 1))
             else:
@@ -872,7 +872,7 @@ class TestGlPanel(GLPanel):
         glHint (GL_LINE_SMOOTH_HINT, GL_NICEST)
         glLineWidth (1.5)
 
-        for i in self.parent.models.values():
+        for i in list(self.parent.models.values()):
             glPushMatrix()
             glTranslatef(*(i.offsets))
             glRotatef(i.rot, 0.0, 0.0, 1.0)

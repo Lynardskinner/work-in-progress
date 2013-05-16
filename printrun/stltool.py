@@ -22,10 +22,10 @@ def genfacet(v):
     veca = [v[1][0]-v[0][0], v[1][1]-v[0][1], v[1][2]-v[0][2]]
     vecb = [v[2][0]-v[1][0], v[2][1]-v[1][1], v[2][2]-v[1][2]]
     vecx = cross(veca, vecb)
-    vlen = math.sqrt(sum(map(lambda x:x*x, vecx)))
+    vlen = math.sqrt(sum([x*x for x in vecx]))
     if vlen == 0:
         vlen = 1
-    normal = map(lambda x:x/vlen, vecx)
+    normal = [x/vlen for x in vecx]
     return [normal, v]
 
 I = [
@@ -36,16 +36,16 @@ I = [
 ]
 
 def transpose(matrix):
-    return zip(*matrix)
+    return list(zip(*matrix))
     #return [[v[i] for v in matrix] for i in xrange(len(matrix[0]))]
 
 def multmatrix(vector, matrix):
-    return map(sum, transpose(map(lambda x:[x[0]*p for p in x[1]], zip(vector, transpose(matrix)))))
+    return list(map(sum, transpose([[x[0]*p for p in x[1]] for x in zip(vector, transpose(matrix))])))
 
 def applymatrix(facet, matrix = I):
     #return facet
     #return [map(lambda x:-1.0*x, multmatrix(facet[0]+[1], matrix)[:3]), map(lambda x:multmatrix(x+[1], matrix)[:3], facet[1])]
-    return genfacet(map(lambda x:multmatrix(x+[1], matrix)[:3], facet[1]))
+    return genfacet([multmatrix(x+[1], matrix)[:3] for x in facet[1]])
 
 f = [[0, 0, 0],[[-3.022642, 0.642482, -9.510565],[-3.022642, 0.642482, -9.510565],[-3.022642, 0.642482, -9.510565]]]
 m = [
@@ -104,7 +104,7 @@ class stl:
             return
         self.f = list(open(filename))
         if not self.f[0].startswith("solid"):
-            print "Not an ascii stl solid - attempting to parse as binary"
+            print("Not an ascii stl solid - attempting to parse as binary")
             f = open(filename, "rb")
             buf = f.read(84)
             while(len(buf)<84):
@@ -114,7 +114,7 @@ class stl:
                 buf+=newdata
             facetcount = struct.unpack_from("<I", buf, 80)
             facetformat = struct.Struct("<ffffffffffffH")
-            for i in xrange(facetcount[0]):
+            for i in range(facetcount[0]):
                 buf = f.read(50)
                 while(len(buf)<50):
                     newdata = f.read(50-len(buf))
@@ -126,8 +126,8 @@ class stl:
                 self.facet = [fd[:3],[fd[3:6], fd[6:9], fd[9:12]]]
                 self.facets+=[self.facet]
                 facet = self.facet
-                self.facetsminz+=[(min(map(lambda x:x[2], facet[1])), facet)]
-                self.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])), facet)]
+                self.facetsminz+=[(min([x[2] for x in facet[1]]), facet)]
+                self.facetsmaxz+=[(max([x[2] for x in facet[1]]), facet)]
             f.close()
             return
         for i in self.f:
@@ -187,8 +187,8 @@ class stl:
         s.facetloc = 0
         s.name = self.name
         for facet in s.facets:
-            s.facetsminz+=[(min(map(lambda x:x[2], facet[1])), facet)]
-            s.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])), facet)]
+            s.facetsminz+=[(min([x[2] for x in facet[1]]), facet)]
+            s.facetsmaxz+=[(max([x[2] for x in facet[1]]), facet)]
         return s
 
     def export(self, f = sys.stdout):
@@ -218,21 +218,21 @@ class stl:
             self.infacet = 11
             self.facetloc = 0
             self.facet = [[0, 0, 0],[[0, 0, 0],[0, 0, 0],[0, 0, 0]]]
-            self.facet[0]=map(float, l.split()[2:])
+            self.facet[0]=list(map(float, l.split()[2:]))
         elif l.startswith("endfacet"):
             self.infacet = 0
             self.facets+=[self.facet]
             facet = self.facet
-            self.facetsminz+=[(min(map(lambda x:x[2], facet[1])), facet)]
-            self.facetsmaxz+=[(max(map(lambda x:x[2], facet[1])), facet)]
+            self.facetsminz+=[(min([x[2] for x in facet[1]]), facet)]
+            self.facetsmaxz+=[(max([x[2] for x in facet[1]]), facet)]
         elif l.startswith("vertex"):
             l = l.replace(", ",".")
-            self.facet[1][self.facetloc]=map(float, l.split()[1:])
+            self.facet[1][self.facetloc]=list(map(float, l.split()[1:]))
             self.facetloc+=1
         return 1
 if __name__ == "__main__":
     s = stl("../../Downloads/frame-vertex-neo-foot-x4.stl")
-    for i in xrange(11, 11):
+    for i in range(11, 11):
         working = s.facets[:]
         for j in reversed(sorted(s.facetsminz)):
             if(j[0]>i):
@@ -245,6 +245,6 @@ if __name__ == "__main__":
             else:
                 break
 
-        print i, len(working)
+        print(i, len(working))
     emitstl("../../Downloads/frame-vertex-neo-foot-x4-a.stl", s.facets, "emitted_object")
 #stl("../prusamendel/stl/mendelplate.stl")

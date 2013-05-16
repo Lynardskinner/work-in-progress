@@ -57,7 +57,7 @@ def authenticate(realm, authenticator,user_extractor) :
           auth_decoded = base64.decodestring(auth_hdr[6:])
           username, password = auth_decoded.split(':', 2)
 
-          user_info = authenticator(realm, unicode(username), password)
+          user_info = authenticator(realm, str(username), password)
           if user_info :
               self._user_info = user_info
               self._current_user = user_extractor(user_info)
@@ -65,7 +65,7 @@ def authenticate(realm, authenticator,user_extractor) :
                         str(self._user_info))
           else:
               return _request_basic_auth(self)
-        except Exception, e:
+        except Exception as e:
             return _request_basic_auth(self)
         return True
     return wrapper
@@ -90,4 +90,4 @@ def interceptor(func):
         return cls
     return classwrapper
 
-print "moo"
+print("moo")

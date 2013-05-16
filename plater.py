@@ -17,7 +17,7 @@
 
 # Set up Internationalization using gettext
 # searching for installed locales on /usr/share; uses relative folder if not found (windows)
-import os, Queue, re
+import os, queue, re
 
 from printrun.printrun_utils import install_locale
 install_locale('plater')
@@ -209,18 +209,18 @@ class showstl(wx.Window):
         offset = [0, 0]
         scale = 2
         dc.SetPen(wx.Pen(wx.Colour(100, 100, 100)))
-        for i in xrange(20):
+        for i in range(20):
             dc.DrawLine(0, i * scale * 10, 400, i * scale * 10)
             dc.DrawLine(i * scale * 10, 0, i * scale * 10, 400)
         dc.SetPen(wx.Pen(wx.Colour(0, 0, 0)))
-        for i in xrange(4):
+        for i in range(4):
             dc.DrawLine(0, i * scale * 50, 400, i * scale * 50)
             dc.DrawLine(i * scale * 50, 0, i * scale * 50, 400)
         dc.SetBrush(wx.Brush(wx.Colour(128, 255, 128)))
         dc.SetPen(wx.Pen(wx.Colour(128, 128, 128)))
         t = time.time()
         dcs = wx.MemoryDC()
-        for m in self.parent.models.values():
+        for m in list(self.parent.models.values()):
             b = m.bitmap
                 #print b
             im = b.ConvertToImage()
@@ -288,7 +288,7 @@ class stlwin(wx.Frame):
         #self.SetClientSize(size)
 
     def autoplate(self, event):
-        print _("Autoplating")
+        print(_("Autoplating"))
         separation = 2
         bedsize = [200, 200, 100]
         cursor = [0, 0, 0]
@@ -316,7 +316,7 @@ class stlwin(wx.Frame):
                 max[1] = cursor[1] + x
             cursor[0] += x + separation
             if (cursor[1] + y) >= bedsize[1]:
-                print _("Bed full, sorry sir :(")
+                print(_("Bed full, sorry sir :("))
                 self.Refresh()
                 return
         centreoffset = [(bedsize[0] - max[0]) / 2, (bedsize[1] - max[1]) / 2]
@@ -378,7 +378,7 @@ class stlwin(wx.Frame):
     def writefiles(self, name):
         sf = open(name.replace(".", "_") + ".scad", "w")
         facets = []
-        for i in self.models.values():
+        for i in list(self.models.values()):
 
             r = i.rot
             o = i.offsets
@@ -390,7 +390,7 @@ class stlwin(wx.Frame):
             facets += i.facets
         sf.close()
         stltool.emitstl(name, facets, "plater_export")
-        print _("wrote %s") % name
+        print(_("wrote %s") % name)
 
     def right(self, event):
         dlg = wx.FileDialog(self, _("Pick file to load"), self.basedir, style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)

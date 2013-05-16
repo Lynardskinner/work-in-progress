@@ -35,7 +35,7 @@ class install (_install):
         if self.prefix:
             length += len (self.prefix)
         if length:
-            for counter in xrange (len (outputs)):
+            for counter in range (len (outputs)):
                 outputs[counter] = outputs[counter][length:]
         data = "\n".join (outputs)
         try:
@@ -56,7 +56,7 @@ class install_data (_install_data):
             except:
                 self.warn ("Could not chmod data file %s" % file)
         _install_data.run (self)
-        map (chmod_data_file, self.get_outputs ())
+        list(map (chmod_data_file, self.get_outputs ()))
 
 class uninstall (_install):
 
@@ -75,10 +75,10 @@ class uninstall (_install):
         if self.prefix:
             prepend += self.prefix
         if len (prepend):
-            for counter in xrange (len (files)):
+            for counter in range (len (files)):
                 files[counter] = prepend + files[counter].rstrip ()
         for file in files:
-            print "Uninstalling %s" % file
+            print("Uninstalling %s" % file)
             try:
                 os.unlink (file)
             except:
@@ -87,7 +87,7 @@ class uninstall (_install):
 ops = ("install", "build", "sdist", "uninstall", "clean")
 
 if len (sys.argv) < 2 or sys.argv[1] not in ops:
-    print "Please specify operation : %s" % " | ".join (ops)
+    print("Please specify operation : %s" % " | ".join (ops))
     raise SystemExit
 
 prefix = None
@@ -126,14 +126,14 @@ for basedir, subdirs, files in os.walk("locale"):
     if not basedir.endswith("LC_MESSAGES"):
         continue
     destpath = os.path.join("share", "pronterface", basedir)
-    files = filter(lambda x: x.endswith(".mo"), files)
-    files = map(lambda x: os.path.join(basedir, x), files)
+    files = [x for x in files if x.endswith(".mo")]
+    files = [os.path.join(basedir, x) for x in files]
     data_files.append ((destpath, files))
 
 extra_data_dirs = ["css"]
 for extra_data_dir in extra_data_dirs:
     for basedir, subdirs, files in os.walk(extra_data_dir):
-        files = map(lambda x: os.path.join(basedir, x), files)
+        files = [os.path.join(basedir, x) for x in files]
         destpath = os.path.join("share", "pronterface", basedir)
         data_files.append ((destpath, files))
 

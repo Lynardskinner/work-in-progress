@@ -16,12 +16,12 @@
 """
     Parsers for specific attributes
 """
-import urlparse
+import urllib.parse
 from pyparsing import (Literal,
     Optional, oneOf, Group, StringEnd, Combine, Word, alphas, hexnums,
     CaselessLiteral, SkipTo
 )
-from css.colour import colourValue
+from .css.colour import colourValue
 import string
 
 ##Paint values
@@ -30,7 +30,7 @@ currentColor = CaselessLiteral("currentColor").setParseAction(lambda t: ["CURREN
 
 def parsePossibleURL(t):
     possibleURL, fallback = t[0]
-    return [urlparse.urlsplit(possibleURL), fallback]
+    return [urllib.parse.urlsplit(possibleURL), fallback]
 
 #Normal color declaration
 colorDeclaration = none | currentColor | colourValue
