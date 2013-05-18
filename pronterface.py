@@ -17,7 +17,7 @@
 
 from __future__ import print_function
 
-import os, re
+import os, sys, re
 
 try:
     import queue
@@ -31,8 +31,14 @@ try:
     import wx
 except:
     print(_("wxPython is not installed. This program requires wxPython to run."))
-    raise
-import sys, glob, time, datetime, threading, traceback, subprocess
+    if sys.version_info.major >= 3:
+        print(_("""\
+As you are currently running python3, this is most likely because wxPython is
+not yet available for python3. You should try running with python2 instead."""))
+        sys.exit(-1)
+    else:
+        raise
+import glob, time, datetime, threading, traceback, subprocess
 from io import StringIO
 
 from printrun.pronterface_widgets import *
